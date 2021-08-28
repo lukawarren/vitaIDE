@@ -9,21 +9,21 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 endif()
 
-project(vitaSSH)
+project(vitaIDE)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
 # Project params
-set(VITA_APP_NAME "vitaSSH")
+set(VITA_APP_NAME "vitaIDE")
 set(VITA_TITLEID  "LUKA00005")
 set(VITA_VERSION  "01.00")
 
 # Build flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2 -DLUA_USE_C89")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2 -std=c++17")
 
 # Source and include directories
-include_directories(include/ debugscreen/)
-file(GLOB SOURCES src/*.cpp src/*.c)
+include_directories(include/ debugscreen/ lua/)
+file(GLOB SOURCES src/*.cpp src/*.c lua/*.c)
 
 # Link directories
 link_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -38,6 +38,9 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   SceLibKernel_stub
   SceDisplay_stub     # For debugscreen
+  SceSysmodule_stub   # For loading modules
+  SceNet_stub         # For networking
+  SceNetCtl_stub      # For networking
 )
 
 ## Create Vita files
