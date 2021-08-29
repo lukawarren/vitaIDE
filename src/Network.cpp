@@ -124,7 +124,7 @@ int WebServer::ClientThread(SceSize args, void* argp)
     printf("[Web server] HTTP GET %s\n", url);
 
     // Open file
-    std::string path = std::string("ux0:/data/vitaIDE/site") + url;
+    std::string path = std::string("ux0:/data/vitaIDE/site/dist") + url;
     if (strcmp(url, "/") == 0) path += "index.html";
     auto fd = sceIoOpen
     (
