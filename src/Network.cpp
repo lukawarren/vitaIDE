@@ -13,7 +13,7 @@
 #define printf psvDebugScreenPrintf
 
 #define NETWORK_BUFFER_SIZE 1024*1024
-#define READ_BUFFER_SIZE 1024*1024*10
+#define READ_BUFFER_SIZE 1024*1024*1
 
 void InitNetworking()
 {
@@ -113,6 +113,9 @@ int WebServer::ClientThread(SceSize args, void* argp)
     char* buffer = new char[READ_BUFFER_SIZE];
     sceNetRecv(*socket, buffer, READ_BUFFER_SIZE, 0);
     
+    buffer[READ_BUFFER_SIZE] = '\0';
+    printf("[Web server] %s\n", buffer);
+
     // Get and null terminate URL; format is "GET [path] HTTP/1.1"
     size_t pathLength = 0;
     char* url = buffer + 4;
