@@ -1,4 +1,5 @@
 build/
 build.sh
+upload.sh
 .vscode
 

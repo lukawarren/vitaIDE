@@ -3,11 +3,11 @@
 void InitNetworking();
 void TerminateNetworking();
 
-class Server
+class WebServer
 {
 public:
-    Server();
-    ~Server();
+    WebServer();
+    ~WebServer();
 
     static int ServerThread(SceSize args, void* argp);
     static int ClientThread(SceSize args, void* argp);

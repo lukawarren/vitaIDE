@@ -9,7 +9,7 @@
 
 #include "Network.h"
 
-#include "debugScreen.h"
+#include <debugScreen.h>
 #define printf psvDebugScreenPrintf
 
 #define NETWORK_BUFFER_SIZE 1024*1024
@@ -28,13 +28,12 @@ void InitNetworking()
     sceNetInit(&sInit);
 
     // Init netctl (for controlling the network)
-    sceNetCtlInit();
-    printf("Networking initialised\n");
+    sceNetCtlInit();    
 
     // Get network details
     SceNetCtlInfo sInfo;
     sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &sInfo);
-    printf("IP address %s\n", sInfo.ip_address);
+    printf("Networking initialised with IP address %s\n",sInfo.ip_address);
 }
 
 void TerminateNetworking()
@@ -44,7 +43,14 @@ void TerminateNetworking()
     printf("Networking terminated\n");
 }
 
-Server::Server()
+std::string GetIP()
+{
+    SceNetCtlInfo sInfo;
+    sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &sInfo);
+    return std::string(sInfo.ip_address);
+}
+
+WebServer::WebServer()
 {
     // Make socket
     socket = sceNetSocket("vitaIDE_server_sock", SCE_NET_AF_INET, SCE_NET_SOCK_STREAM, 0);
@@ -53,9 +59,9 @@ Server::Server()
     SceNetSockaddrIn sAddr;
     sAddr.sin_family = SCE_NET_AF_INET;
     sAddr.sin_addr.s_addr = sceNetHtonl(SCE_NET_INADDR_ANY); // Convert from host to network byte order
-    sAddr.sin_port = sceNetHtons(1337);                      // Convert from host to network byte order
+    sAddr.sin_port = sceNetHtons(8080);                      // Convert from host to network byte order
     int status = sceNetBind(socket, (SceNetSockaddr*)&sAddr, sizeof(sAddr));
-    printf("Bound socket to fd %d with status 0x%08X\n", socket, status);
+    printf("[Web server] Bound socket to fd %d with status 0x%08X\n", socket, status);
 
     // Start listening
     sceNetListen(socket, 128); // 128 backlog
@@ -65,10 +71,10 @@ Server::Server()
     sceKernelStartThread(thread, sizeof(this), this);
 }
 
-int Server::ServerThread(SceSize args, void* argp)
+int WebServer::ServerThread(SceSize args, void* argp)
 {
-    Server* server = (Server*)argp;
-    printf("Server started\n");
+    WebServer* server = (WebServer*)argp;
+    printf("[Web server] Started on port 8080\n");
 
     while(1)
     {
@@ -99,7 +105,7 @@ int Server::ServerThread(SceSize args, void* argp)
     return 0;
 }
 
-int Server::ClientThread(SceSize args, void* argp)
+int WebServer::ClientThread(SceSize args, void* argp)
 {
     const int* socket = (int*)argp;
 
@@ -112,11 +118,11 @@ int Server::ClientThread(SceSize args, void* argp)
     char* url = buffer + 4;
     while (*(url + pathLength) != ' ') ++pathLength;
     url[pathLength] = '\0';
-    printf("HTTP GET %s\n", url);
+    printf("[Web server] HTTP GET %s\n", url);
 
     // Open file
-    std::string path = std::string("app0:/site") + url;
-    if (path == "app0:/site/") path = "app0:/site/index.html";
+    std::string path = std::string("ux0:/data/vitaIDE/site") + url;
+    if (strcmp(url, "/") == 0) path += "index.html";
     auto fd = sceIoOpen
     (
         path.c_str(),
@@ -163,7 +169,7 @@ int Server::ClientThread(SceSize args, void* argp)
     return 0;
 }
 
-Server::~Server()
+WebServer::~WebServer()
 {
     // (closing the socket terminates our server thread too)
     sceNetSocketClose(socket);
