@@ -6,7 +6,7 @@
             :highlight="highlighter"
             :code="code"
             :tabSize="4"
-            line-numbers
+            :readonly="true"
         ></prism-editor>
     </div>
 </template>
@@ -14,37 +14,23 @@
 <script>
 import { PrismEditor } from "vue-prism-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
-import "prismjs/components/prism-lua";
 
 export default {
-    name: "Source",
+    name: "Console",
     data: () => ({
-        code: `-- Write your code here!
-print("Hello world!")
-
-for i=1,10 do
-    print(i)
-end
-
-print("Hello world!")
-
-for i=1,10 do
-    print(i)
-end
-
-print("Hello world!")
-
-for i=1,10 do
-    print(i)
-end
-`,
+        code: `Python 2.7.18 (default, Jul 14 2021, 08:11:37)
+[GCC 10.2.1 20210110] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> print("I was too lazy to find a Lua prompt")
+>>>`,
     }),
     components: {
         PrismEditor,
     },
     methods: {
         highlighter(code) {
-            return highlight(code, languages.lua);
+            console.log(languages);
+            return highlight(code, languages.txt);
         },
     },
 };

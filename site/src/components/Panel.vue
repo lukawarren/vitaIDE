@@ -1,7 +1,7 @@
 <template>
-    <div class="md-layout-item">
+    <div>
         <md-card md-with-hover>
-            <md-toolbar md-elevation="1">
+            <md-toolbar md-elevation>
                 <div class="md-title">{{ title }}</div>
             </md-toolbar>
 
@@ -25,9 +25,5 @@ export default {
     margin-bottom: 8px;
     margin-left: 4px;
     margin-right: 4px;
-}
-
-.md-title {
-    margin-left: 0;
 }
 </style>

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "prism-themes": "^1.8.0",
     "prismjs": "^1.24.1",
     "vue": "^2.6.11",
     "vue-material": "^1.0.0-beta-15",
