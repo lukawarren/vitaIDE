@@ -2,18 +2,13 @@
 #include <psp2/net/netctl.h>
 #include <psp2/sysmodule.h>
 #include <psp2/io/fcntl.h>
-#include <psp2/io/stat.h>
 #include <psp2/net/net.h>
-#include <cstring>
 #include <string>
 
 #include "Network.h"
 
 #include <debugScreen.h>
 #define printf psvDebugScreenPrintf
-
-#define NETWORK_BUFFER_SIZE 1024*1024
-#define READ_BUFFER_SIZE 1024*1024*1
 
 void InitNetworking()
 {
@@ -33,7 +28,7 @@ void InitNetworking()
     // Get network details
     SceNetCtlInfo sInfo;
     sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &sInfo);
-    printf("Networking initialised with IP address %s\n",sInfo.ip_address);
+    printf("Networking initialised with IP address %s\n", sInfo.ip_address);
 }
 
 void TerminateNetworking()
@@ -43,14 +38,8 @@ void TerminateNetworking()
     printf("Networking terminated\n");
 }
 
-std::string GetIP()
-{
-    SceNetCtlInfo sInfo;
-    sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &sInfo);
-    return std::string(sInfo.ip_address);
-}
-
-WebServer::WebServer()
+Server::Server(const std::string& serverName, const unsigned short port, const std::function<void(int)> clientFunction, bool makeNewThread) :
+    port(port), serverName(serverName), clientFunction(clientFunction)
 {
     // Make socket
     socket = sceNetSocket("vitaIDE_server_sock", SCE_NET_AF_INET, SCE_NET_SOCK_STREAM, 0);
@@ -59,22 +48,31 @@ WebServer::WebServer()
     SceNetSockaddrIn sAddr;
     sAddr.sin_family = SCE_NET_AF_INET;
     sAddr.sin_addr.s_addr = sceNetHtonl(SCE_NET_INADDR_ANY); // Convert from host to network byte order
-    sAddr.sin_port = sceNetHtons(8080);                      // Convert from host to network byte order
+    sAddr.sin_port = sceNetHtons(port);                      // Convert from host to network byte order
     int status = sceNetBind(socket, (SceNetSockaddr*)&sAddr, sizeof(sAddr));
-    printf("[Web server] Bound socket to fd %d with status 0x%08X\n", socket, status);
+
+    if (status != 0)
+        printf("[%s] Unexpected status %d when attempting to bind port %d to fd %d\n",
+            serverName.c_str(), status, port, socket);
 
     // Start listening
     sceNetListen(socket, 128); // 128 backlog
 
     // Server thread
-    thread = sceKernelCreateThread("vitaIDE_server_thread", ServerThread, 0x10000100, 0x10000, 0, 0, NULL);
-    sceKernelStartThread(thread, sizeof(this), this);
+    Server* argp = this;
+    if (makeNewThread)
+    {
+        std::string threadName = "vitaIDE_server_thread_" + std::to_string(port);
+        auto thread = sceKernelCreateThread(threadName.c_str(), ServerThread, 0x10000100, 0x10000, 0, 0, NULL);
+        sceKernelStartThread(thread, sizeof(argp), &argp);
+    }
+    else ServerThread(1, &argp);
 }
 
-int WebServer::ServerThread(SceSize args, void* argp)
+int Server::ServerThread(SceSize args, void* argp)
 {
-    WebServer* server = (WebServer*)argp;
-    printf("[Web server] Started on port 8080\n");
+    Server* server = *(Server**)argp;
+    printf("[%s] Started on port %d\n", server->serverName.c_str(), server->port);
 
     while(1)
     {
@@ -87,14 +85,20 @@ int WebServer::ServerThread(SceSize args, void* argp)
         {
             // Make unique(ish) thread name
             static int nConnections = 0;
-            const std::string clientName = "vitaIDE_client_thread_" + std::to_string(nConnections++);
+            const std::string clientName =
+                "vitaIDE_port_" + std::to_string(server->port) + "_client_" + std::to_string(nConnections++);
+
+            // Make argp
+            ClientThreadInfo argp;
+            argp.server = server;
+            argp.socket = clientSocket;
 
             // Create client thread
             sceKernelStartThread
             (
                 sceKernelCreateThread(clientName.c_str(), ClientThread, 0x10000100, 0x10000, 0, 0, NULL),
-                sizeof(clientSocket),
-                &clientSocket
+                sizeof(argp),
+                &argp
             );
         }
 
@@ -105,74 +109,19 @@ int WebServer::ServerThread(SceSize args, void* argp)
     return 0;
 }
 
-int WebServer::ClientThread(SceSize args, void* argp)
+int Server::ClientThread(SceSize args, void* argp)
 {
-    const int* socket = (int*)argp;
+    // Call lambda passed in constructor
+    ClientThreadInfo* info = (ClientThreadInfo*)argp;
+    info->server->clientFunction(info->socket);
 
-    // Receive data
-    char* buffer = new char[READ_BUFFER_SIZE];
-    sceNetRecv(*socket, buffer, READ_BUFFER_SIZE, 0);
-    
-    buffer[READ_BUFFER_SIZE] = '\0';
-    printf("[Web server] %s\n", buffer);
-
-    // Get and null terminate URL; format is "GET [path] HTTP/1.1"
-    size_t pathLength = 0;
-    char* url = buffer + 4;
-    while (*(url + pathLength) != ' ') ++pathLength;
-    url[pathLength] = '\0';
-    printf("[Web server] HTTP GET %s\n", url);
-
-    // Open file
-    std::string path = std::string("ux0:/data/vitaIDE/site/dist") + url;
-    if (strcmp(url, "/") == 0) path += "index.html";
-    auto fd = sceIoOpen
-    (
-        path.c_str(),
-        SCE_O_RDONLY,
-        0777
-    );
-
-    // HTTP reponse header
-    const std::string status = (fd >= 0) ? "200" : "404";
-    const std::string header = "HTTP/1.1 " + status + " OK\n";
-    sceNetSend(*socket, header.c_str(), header.length(), 0);
-
-    if (fd >= 0)
-    {
-        // Get size for Content-Length
-        SceIoStat stat;
-        sceIoGetstatByFd(fd, &stat);
-        const std::string contentLength = "Content-Length: " + std::to_string(stat.st_size) + "\n\n";
-        sceNetSend(*socket, contentLength.c_str(), contentLength.length(), 0);
-
-        // Read file and send
-        unsigned int bytesRead = 0;
-        while ((bytesRead = sceIoRead(fd, buffer, READ_BUFFER_SIZE)) > 0)
-            sceNetSend(*socket, buffer, bytesRead, 0);
-    }
-
-    // File not found, 404
-    else
-    {
-        const std::string content =
-            "Content-Length: 4\n\n"
-            "404\n";
-        
-        sceNetSend(*socket, content.c_str(), content.length(), 0);
-    }
-
-    sceIoClose(fd);
-
-    // Free resources
-    sceNetSocketClose(*socket);
-
-    delete [] buffer;
+    // Cleanup
+    sceNetSocketClose(info->socket);
     sceKernelExitDeleteThread(0);
     return 0;
 }
 
-WebServer::~WebServer()
+Server::~Server()
 {
     // (closing the socket terminates our server thread too)
     sceNetSocketClose(socket);
