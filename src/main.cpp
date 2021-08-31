@@ -91,6 +91,7 @@ int main()
         }
 
         sceIoClose(fd);
+        delete[] buffer;
     });
     
     // Start Lua server
@@ -153,7 +154,7 @@ int main()
         // Return output
         unsigned int bytes = (usedBytes < READ_BUFFER_SIZE) ? usedBytes : READ_BUFFER_SIZE;
         sceNetSend(socket, buffer, bytes, 0);
-
+        delete[] buffer;
     }, false);
 
     ftpvita_fini();

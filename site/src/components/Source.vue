@@ -51,11 +51,11 @@ end
     overflow: auto;
 }
 
-.prism-editor-wrapper .prism-editor__editor, .prism-editor-wrapper .prism-editor__textarea {
+.prism-editor-wrapper::v-deep .prism-editor__editor, .prism-editor-wrapper .prism-editor__textarea {
   white-space: pre !important;
 }
 
-.prism-editor-wrapper .prism-editor__container {
+.prism-editor-wrapper::v-deep .prism-editor__container {
     overflow: visible !important;
 }
 
