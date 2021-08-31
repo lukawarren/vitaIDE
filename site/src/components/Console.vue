@@ -2,9 +2,8 @@
     <div>
         <prism-editor
             class="editor"
-            v-model="code"
+            :value="code"
             :highlight="highlighter"
-            :code="code"
             :tabSize="4"
             :readonly="true"
         ></prism-editor>
@@ -17,19 +16,12 @@ import { highlight, languages } from "prismjs/components/prism-core";
 
 export default {
     name: "Console",
-    data: () => ({
-        code: `Python 2.7.18 (default, Jul 14 2021, 08:11:37)
-[GCC 10.2.1 20210110] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> print("I was too lazy to find a Lua prompt")
->>>`,
-    }),
+    props: ["code"],
     components: {
         PrismEditor,
     },
     methods: {
         highlighter(code) {
-            console.log(languages);
             return highlight(code, languages.txt);
         },
     },
@@ -41,11 +33,22 @@ Type "help", "copyright", "credits" or "license" for more information.
     font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
     line-height: 1.5;
     color: white;
+    max-height: 86vh;
+    overflow: auto;
 }
+
 </style>
 
 <style lang="css">
 .prism-editor__textarea:focus {
     outline: none;
+}
+
+.prism-editor-wrapper .prism-editor__editor, .prism-editor-wrapper .prism-editor__textarea {
+  white-space: pre !important;
+}
+
+.prism-editor-wrapper .prism-editor__container {
+    overflow: visible !important;
 }
 </style>

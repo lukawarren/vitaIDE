@@ -2,15 +2,15 @@
     <div id="app" class="md-layout">
         <Panel
             title="Source"
-            class="md-layout-item md-size-70 md-small-size-100"
+            class="md-layout-item md-size-80 md-small-size-100"
         >
-            <Source />
+            <Source v-on:send="send"/>
         </Panel>
         <Panel
             title="Console"
-            class="md-layout-item md-size-30 md-small-size-100"
+            class="md-layout-item md-size-20 md-small-size-100"
         >
-            <Console />
+            <Console :code="displayCode"/>
         </Panel>
     </div>
 </template>
@@ -27,6 +27,30 @@ export default {
         Source,
         Console,
     },
+    created() {
+        window.setInterval(() => {
+            if (this.code != "") {
+                // Submit to vita's lua server (see C++ code)
+                var req = new XMLHttpRequest();
+                req.open("POST", "http://" + location.hostname + ":1010/");
+                req.addEventListener("load", () => {
+                    this.displayCode = req.responseText
+                });
+                req.send("LUA " + this.code);
+
+                this.code = "";
+            }
+        }, 1000);
+    },
+    methods: {
+        send(code) {
+            this.code = code;
+        },
+    },
+    data: () => ({
+        code: "",
+        displayCode: ""
+    }),
 };
 </script>
 
@@ -51,5 +75,7 @@ export default {
     // For equal height panels
     display: flex;
     align-items: stretch;
+
+    min-height: 100vh;
 }
 </style>
