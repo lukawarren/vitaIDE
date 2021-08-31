@@ -51,18 +51,18 @@ end
     overflow: auto;
 }
 
-</style>
-
-<style lang="css">
-.prism-editor__textarea:focus {
-    outline: none;
-}
-
 .prism-editor-wrapper .prism-editor__editor, .prism-editor-wrapper .prism-editor__textarea {
   white-space: pre !important;
 }
 
 .prism-editor-wrapper .prism-editor__container {
     overflow: visible !important;
+}
+
+</style>
+
+<style lang="css">
+.prism-editor__textarea:focus {
+    outline: none;
 }
 </style>

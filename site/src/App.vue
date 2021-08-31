@@ -32,7 +32,7 @@ export default {
             if (this.code != "") {
                 // Submit to vita's lua server (see C++ code)
                 var req = new XMLHttpRequest();
-                req.open("POST", "http://" + location.hostname + ":1010/");
+                req.open("POST", "http://" + "192.168.1.192" + ":1010/");
                 req.addEventListener("load", () => {
                     this.displayCode = req.responseText
                 });
