@@ -38,7 +38,7 @@ void TerminateNetworking()
     printf("Networking terminated\n");
 }
 
-Server::Server(const std::string& serverName, const unsigned short port, const std::function<void(int)> clientFunction, bool makeNewThread) :
+Server::Server(const std::string& serverName, const unsigned short port, const std::function<void(int)> clientFunction) :
     port(port), serverName(serverName), clientFunction(clientFunction)
 {
     // Make socket
@@ -60,13 +60,9 @@ Server::Server(const std::string& serverName, const unsigned short port, const s
 
     // Server thread
     Server* argp = this;
-    if (makeNewThread)
-    {
-        std::string threadName = "vitaIDE_server_thread_" + std::to_string(port);
-        auto thread = sceKernelCreateThread(threadName.c_str(), ServerThread, 0x10000100, 0x10000, 0, 0, NULL);
-        sceKernelStartThread(thread, sizeof(argp), &argp);
-    }
-    else ServerThread(1, &argp);
+    std::string threadName = "vitaIDE_server_thread_" + std::to_string(port);
+    auto thread = sceKernelCreateThread(threadName.c_str(), ServerThread, 0x10000100, 0x10000, 0, 0, NULL);
+    sceKernelStartThread(thread, sizeof(argp), &argp);
 }
 
 int Server::ServerThread(SceSize args, void* argp)

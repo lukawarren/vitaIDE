@@ -41,6 +41,7 @@ target_link_libraries(${PROJECT_NAME}
   SceSysmodule_stub   # For loading modules
   SceNet_stub         # For networking
   SceNetCtl_stub      # For networking
+  SceCtrl_stub        # For input
   ftpvita
 )
 
