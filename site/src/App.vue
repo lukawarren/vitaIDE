@@ -4,13 +4,13 @@
             title="Source"
             class="md-layout-item md-size-80 md-small-size-100"
         >
-            <Source v-on:send="send"/>
+            <Source v-on:send="send" />
         </Panel>
         <Panel
             title="Console"
             class="md-layout-item md-size-20 md-small-size-100"
         >
-            <Console :code="displayCode"/>
+            <Console :code="displayCode" />
         </Panel>
     </div>
 </template>
@@ -34,7 +34,7 @@ export default {
                 var req = new XMLHttpRequest();
                 req.open("POST", "http://" + "192.168.1.192" + ":1010/");
                 req.addEventListener("load", () => {
-                    this.displayCode = req.responseText
+                    this.displayCode = req.responseText;
                 });
                 req.send("LUA " + this.code);
 
@@ -49,7 +49,7 @@ export default {
     },
     data: () => ({
         code: "",
-        displayCode: ""
+        displayCode: "",
     }),
 };
 </script>

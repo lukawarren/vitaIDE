@@ -36,7 +36,6 @@ export default {
     max-height: 86vh;
     overflow: auto;
 }
-
 </style>
 
 <style lang="css">

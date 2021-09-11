@@ -12,10 +12,8 @@ extern "C"
 #include <debugScreen.h>
 #define printf psvDebugScreenPrintf
 
-static void LogFTP(const char* s)
-{
-    printf("[libftpvita] %s", s);
-}
+// Silence FTP
+static void LogFTP(const char*) {}
 
 int main()
 {

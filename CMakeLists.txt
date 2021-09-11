@@ -18,8 +18,8 @@ set(VITA_TITLEID  "LUKA00005")
 set(VITA_VERSION  "01.00")
 
 # Build flags (no warnings for external C for sanity)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -DLUA_USE_C89 -g")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2 -std=c++17 -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -DLUA_USE_C89")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2 -std=c++17")
 
 # Source and include directories
 include_directories(include/ debugscreen/ lua/)
