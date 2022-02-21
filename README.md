@@ -2,6 +2,11 @@
 A web-based Lua IDE for the Vita, with an included FTP server.
 ![IDE screenshot](screenshots/ide.png)
 
+Components:
+- Vue web-app (stored on Vita)
+- Custom HTTP server + Lua engine backend to serve app (runs on Vita)
+- [FTP server](https://github.com/xerpi/libftpvita) to assist patching and development (also runs on Vita)
+
 ## Building
 First, the website can optionally be built (see dependencies):
 ```
